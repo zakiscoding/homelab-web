@@ -43,7 +43,7 @@ source ./scripts/docker-1tb-env.sh
 docker-compose up -d --build web
 ```
 
-Open http://100.91.113.98:3080 (Tailscale).
+Open http://100.91.113.98:3080 (Tailscale) or **https://your-domain** after [public deploy](https://github.com/zakiscoding/homelab/blob/main/docs/deploy/public-internet.md) (Caddy on iMac, no tunnel service).
 
 ## API proxy
 
