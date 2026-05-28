@@ -1,6 +1,6 @@
 # homelab-web
 
-Next.js UI for the homelab ML platform (chat, RAG, status). Talks to the iMac FastAPI through a **server-side proxy** so your API key never ships to the browser.
+Next.js UI for the homelab ML platform (chat, RAG, reactions, status). Talks to the iMac FastAPI through a **server-side proxy** so your API key never ships to the browser.
 
 | | |
 |--|--|
@@ -12,18 +12,17 @@ Next.js UI for the homelab ML platform (chat, RAG, status). Talks to the iMac Fa
 | Environment | Where | URL |
 |-------------|-------|-----|
 | **Development** | Laptop (`cashh`) | http://localhost:3000 |
-| **Production** | iMac Docker | http://100.91.113.98:3080 or http://100.91.113.98/ |
+| **Production** | iMac Docker | http://100.91.113.98:3081 or http://100.91.113.98/ |
 | **Do not host on** | GPU PC | Inference/training only |
 
 ```text
-  Browser ──► homelab-web (iMac :3080 or Caddy :80)
+  Browser ──► homelab-web (iMac :3081 or Caddy :80)
                   │
                   │  /api/homelab/*  (BFF + API_KEY server-side)
                   ▼
              iMac FastAPI (internal)
-                  │
-                  ▼
-             GPU Ollama :11434
+                  ├── Ollama :11434 (chat/RAG)
+                  └── Reaction serve :8100 (vision)
 ```
 
 Grafana stays on **http://100.91.113.98:3000** (separate port).
@@ -69,17 +68,24 @@ Browser → `/api/homelab/*` → Next route handler → FastAPI with `x-api-key`
 | `/` | Health, GPU, system status |
 | `/chat` | `POST /chat` |
 | `/rag` | Ingest, query, status |
+| `/reactions` | `GET /vision/status`, `POST /vision/reaction` |
 
-## GPU prerequisite
+## GPU prerequisites
 
-Chat requires Ollama on the GPU PC:
+**Chat / RAG** — Ollama on the GPU PC:
 
 ```powershell
 curl.exe http://100.88.71.33:11434/api/tags
 schtasks /Run /TN HomelabOllamaServe   # on zak_pc
 ```
 
-See [homelab-gpu/scripts/start-ollama.ps1](https://github.com/zakiscoding/homelab-gpu/blob/main/scripts/start-ollama.ps1).
+**Reactions** — reaction serve on `:8100` (see [homelab vision-reactions](https://github.com/zakiscoding/homelab/blob/main/docs/services/vision-reactions.md)).
+
+## Chat UX
+
+- GPU health banner on `/chat`
+- 2-minute client timeout
+- Clearer 502 when Ollama is unreachable
 
 ## Related repos
 

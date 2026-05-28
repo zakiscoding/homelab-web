@@ -4,6 +4,7 @@ const nav = [
   { href: "/", label: "Overview" },
   { href: "/chat", label: "Chat" },
   { href: "/rag", label: "RAG" },
+  { href: "/reactions", label: "Reactions" },
 ] as const;
 
 export function Shell({

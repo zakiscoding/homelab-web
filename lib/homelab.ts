@@ -3,10 +3,12 @@ import { homelabConfig } from "./config";
 const ALLOWED_PREFIXES = [
   "chat",
   "rag/",
+  "vision/",
   "system/",
   "health",
   "stats",
   "jobs",
+  "models",
 ] as const;
 
 export function isAllowedHomelabPath(path: string): boolean {
@@ -62,4 +64,23 @@ export type RagQueryResult = {
   duration_ms: number;
   job_id?: string | null;
   cached?: boolean;
+};
+
+export type VisionStatus = {
+  vision: string;
+  gpu_vision_url?: string;
+  classes?: string[];
+  checkpoint?: string;
+  device?: string;
+  error?: string;
+};
+
+export type ReactionResult = {
+  label: string | null;
+  confidence: number;
+  reason: string;
+  face_detected: boolean;
+  probabilities: Record<string, number>;
+  duration_ms?: number;
+  bbox?: { x: number; y: number; w: number; h: number };
 };
