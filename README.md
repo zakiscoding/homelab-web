@@ -1,8 +1,16 @@
+<div align="center">
+
 # homelab-web
+
+**The Next.js web UI for the homelab ML platform: chat, RAG, facial-expression reactions and platform status, served through a server-side proxy so the API key never reaches the browser.**
+
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white) ![React](https://img.shields.io/badge/React-19-149eca?style=flat-square&logo=react&logoColor=white) ![Tailwind](https://img.shields.io/badge/Tailwind-4-06b6d4?style=flat-square&logo=tailwindcss&logoColor=white) ![served](https://img.shields.io/badge/served-iMac%20:3081-555555?style=flat-square&logo=apple&logoColor=white)
 
 [homelab](https://github.com/zakiscoding/homelab) (docs hub) · [homelab-services](https://github.com/zakiscoding/homelab-services) · **homelab-web** · [homelab-gpu](https://github.com/zakiscoding/homelab-gpu) · [gpu-systems-lab](https://github.com/zakiscoding/gpu-systems-lab)
 
-**The Next.js web UI for the homelab ML platform: chat, RAG, facial-expression reactions and platform status, served through a server-side proxy so the API key never reaches the browser.**
+</div>
+
+---
 
 > **Branch note:** `main` is the live branch that the iMac deploys. The GitHub default branch is currently `master`, which is stale (initial commit only). Clone or check out `main`.
 
