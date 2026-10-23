@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Shell } from "@/components/shell";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import type { ChatResult } from "@/lib/homelab";
+import { apiErrorDetail, parseApiResponse } from "@/lib/parse-api-response";
 
 const CHAT_TIMEOUT_MS = 120_000;
 
@@ -14,15 +15,29 @@ export default function ChatPage() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ChatResult | null>(null);
   const [gpuOk, setGpuOk] = useState<boolean | null>(null);
+  const [modelOptions, setModelOptions] = useState<string[]>(["llama3.2:latest"]);
 
   useEffect(() => {
     fetch("/api/homelab/health/gpu")
       .then(async (res) => {
-        if (!res.ok) throw new Error("gpu down");
-        const data = await res.json();
-        setGpuOk(data.gpu === "ok");
+        const data = (await parseApiResponse(res)) as { gpu?: string };
+        setGpuOk(res.ok && data.gpu === "ok");
       })
       .catch(() => setGpuOk(false));
+
+    fetch("/api/homelab/models")
+      .then(async (res) => {
+        if (!res.ok) return;
+        const data = (await parseApiResponse(res)) as {
+          models?: string[];
+          homelab_models?: string[];
+          default_chat_model?: string;
+        };
+        const names = data.models?.length ? data.models : ["llama3.2:latest"];
+        setModelOptions(names);
+        if (data.default_chat_model) setModel(data.default_chat_model);
+      })
+      .catch(() => {});
   }, []);
 
   async function onSubmit(e: React.FormEvent) {
@@ -39,12 +54,9 @@ export default function ChatPage() {
         body: JSON.stringify({ prompt, model }),
         signal: controller.signal,
       });
-      const data = await res.json();
+      const data = (await parseApiResponse(res)) as Record<string, unknown>;
       if (!res.ok) {
-        const detail =
-          typeof data.detail === "string"
-            ? data.detail
-            : JSON.stringify(data.detail ?? res.statusText);
+        const detail = apiErrorDetail(data, res, res.statusText);
         if (res.status === 503 && detail.includes("gpu_busy")) {
           throw new Error("GPU is busy (training job). Stop training or wait, then retry.");
         }
@@ -55,7 +67,7 @@ export default function ChatPage() {
         }
         throw new Error(detail);
       }
-      setResult(data);
+      setResult(data as unknown as ChatResult);
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         setError(
@@ -90,7 +102,22 @@ export default function ChatPage() {
             value={model}
             onChange={(e) => setModel(e.target.value)}
             placeholder="llama3.2:latest"
+            list="ollama-models"
           />
+          <datalist id="ollama-models">
+            {modelOptions.map((m) => (
+              <option key={m} value={m} />
+            ))}
+          </datalist>
+          {model.startsWith("homelab-") ? (
+            <p className="mt-1 text-xs text-emerald-400/90">Using published LoRA model</p>
+          ) : (
+            <p className="mt-1 text-xs text-zinc-500">
+              Base Ollama model. After training, publish with{" "}
+              <code className="rounded bg-zinc-900 px-1">publish-lora-to-ollama.ps1</code>{" "}
+              then pick a <code className="rounded bg-zinc-900 px-1">homelab-*</code> tag.
+            </p>
+          )}
           <div className="mt-4">
             <Label>Prompt</Label>
             <Textarea
