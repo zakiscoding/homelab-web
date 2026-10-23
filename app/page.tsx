@@ -9,10 +9,19 @@ async function loadStatus() {
       homelabFetch("health/gpu"),
       homelabFetch("system/status"),
     ]);
+    async function safeJson(res: Response) {
+      const text = await res.text();
+      if (!text.trim()) return null;
+      try {
+        return JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        return null;
+      }
+    }
     return {
-      health: health.ok ? await health.json() : null,
-      gpu: gpu.ok ? await gpu.json() : null,
-      system: system.ok ? await system.json() : null,
+      health: health.ok ? await safeJson(health) : null,
+      gpu: gpu.ok ? await safeJson(gpu) : null,
+      system: system.ok ? await safeJson(system) : null,
       error: null,
     };
   } catch (e) {
@@ -65,7 +74,7 @@ export default async function OverviewPage() {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <h2 className="mb-4 text-sm font-semibold text-zinc-100">Services</h2>
-          <StatusRow label="API" value={health?.status ?? "unknown"} />
+          <StatusRow label="API" value={String(health?.status ?? "unknown")} />
           <StatusRow
             label="GPU (Ollama)"
             value={String((gpu as { gpu?: string })?.gpu ?? "unknown")}

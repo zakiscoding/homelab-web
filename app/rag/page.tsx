@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Shell } from "@/components/shell";
 import { Button, Card, Input, Label, Textarea } from "@/components/ui";
 import type { RagIngestResult, RagQueryResult } from "@/lib/homelab";
+import { apiErrorDetail, parseApiResponse } from "@/lib/parse-api-response";
 
 type Tab = "ingest" | "query";
 
@@ -23,7 +24,7 @@ export default function RagPage() {
 
   async function refreshStatus() {
     const res = await fetch("/api/homelab/rag/status");
-    if (res.ok) setStatus(await res.json());
+    if (res.ok) setStatus((await parseApiResponse(res)) as Record<string, unknown>);
   }
 
   async function onIngest(e: React.FormEvent) {
@@ -41,9 +42,9 @@ export default function RagPage() {
           auto_embed: true,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail ?? res.statusText);
-      setIngestResult(data);
+      const data = await parseApiResponse(res);
+      if (!res.ok) throw new Error(apiErrorDetail(data, res, "Ingest failed"));
+      setIngestResult(data as RagIngestResult);
       await refreshStatus();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ingest failed");
@@ -63,9 +64,9 @@ export default function RagPage() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ query, model, top_k: 5 }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail ?? res.statusText);
-      setQueryResult(data);
+      const data = await parseApiResponse(res);
+      if (!res.ok) throw new Error(apiErrorDetail(data, res, "Query failed"));
+      setQueryResult(data as RagQueryResult);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Query failed");
     } finally {
