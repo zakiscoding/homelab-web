@@ -8,6 +8,15 @@ import { apiErrorDetail, parseApiResponse } from "@/lib/parse-api-response";
 
 const INTERVAL_MS = 600;
 
+async function fetchVisionStatus(): Promise<VisionStatus> {
+  try {
+    const res = await fetch("/api/homelab/vision/status");
+    return (await parseApiResponse(res)) as VisionStatus;
+  } catch {
+    return { vision: "down" };
+  }
+}
+
 function canUseWebcam(): boolean {
   return (
     typeof window !== "undefined" &&
@@ -29,19 +38,17 @@ export default function ReactionsPage() {
   const [loading, setLoading] = useState(false);
   const webcamOk = canUseWebcam();
 
-  const refreshStatus = useCallback(async () => {
-    try {
-      const res = await fetch("/api/homelab/vision/status");
-      const data = (await parseApiResponse(res)) as VisionStatus;
-      setStatus(data);
-    } catch {
-      setStatus({ vision: "down" });
-    }
-  }, []);
-
+  // Load the vision service status once on mount. The setState calls run in
+  // promise callbacks, and are dropped if the page unmounts first.
   useEffect(() => {
-    refreshStatus();
-  }, [refreshStatus]);
+    let active = true;
+    fetchVisionStatus().then((data) => {
+      if (active) setStatus(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const inferFromBase64 = useCallback(async (image_b64: string) => {
     setLoading(true);
